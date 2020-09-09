@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tasker/screens/add_task_screen.dart';
 
 class ListScreen extends StatefulWidget {
   @override
@@ -13,7 +14,10 @@ class _ListScreenState extends State<ListScreen> {
         children: [
           ListTile(
             title: Text("Hello",
-                style: TextStyle(decoration: TextDecoration.lineThrough)),
+                style: TextStyle(
+                    decoration: TextDecoration.lineThrough,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500)),
             subtitle: Text("Nov 11th 2020 • Low"),
             trailing: Checkbox(
                 onChanged: (value) {
@@ -34,10 +38,11 @@ class _ListScreenState extends State<ListScreen> {
         floatingActionButton: FloatingActionButton(
           backgroundColor: Theme.of(context).primaryColor,
           child: Icon(Icons.add),
-          onPressed: () => print('Navigate to Add Task Screen'),
+          onPressed: () => Navigator.push(
+              context, MaterialPageRoute(builder: (_) => AddTaskScreen())),
         ),
         body: ListView.builder(
-          padding: EdgeInsets.symmetric(vertical: 80),
+          padding: EdgeInsets.symmetric(vertical: 70),
           itemCount: 11,
           itemBuilder: (BuildContext context, int index) {
             if (index == 0) {
