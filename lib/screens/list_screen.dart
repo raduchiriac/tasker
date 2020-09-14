@@ -112,7 +112,7 @@ class _ListScreenState extends State<ListScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "My tasks",
+                        "Tasks",
                         style: TextStyle(
                             color: Colors.black,
                             fontSize: 40,
