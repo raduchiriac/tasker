@@ -74,6 +74,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
 
+  _delete() {
+    DBHelper.instance.deleteTask(widget.task.id);
+    widget.updateTaskList();
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -175,25 +181,27 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                           onPressed: _submit,
                         ),
                       ),
-                      Container(
-                        margin: EdgeInsets.symmetric(vertical: 0.0),
-                        height: 60.0,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor,
-                          borderRadius: BorderRadius.circular(30.0),
-                        ),
-                        child: FlatButton(
-                          child: Text(
-                            "DELETE",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20.0,
-                            ),
-                          ),
-                          onPressed: _submit,
-                        ),
-                      )
+                      widget.task == null
+                          ? SizedBox.shrink()
+                          : Container(
+                              margin: EdgeInsets.symmetric(vertical: 0.0),
+                              height: 60.0,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).primaryColor,
+                                borderRadius: BorderRadius.circular(30.0),
+                              ),
+                              child: FlatButton(
+                                child: Text(
+                                  "DELETE",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20.0,
+                                  ),
+                                ),
+                                onPressed: _delete,
+                              ),
+                            )
                     ],
                   ),
                 ),
