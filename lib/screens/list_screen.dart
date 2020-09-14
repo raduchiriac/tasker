@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:tasker/helpers/db_helper.dart';
+import 'package:tasker/models/task_model.dart';
 import 'package:tasker/screens/add_task_screen.dart';
 
 class ListScreen extends StatefulWidget {
@@ -7,24 +10,67 @@ class ListScreen extends StatefulWidget {
 }
 
 class _ListScreenState extends State<ListScreen> {
-  Widget _createTask(int index) {
+  Future<List<Task>> _taskList;
+
+  final DateFormat _dateFormatter = DateFormat('MMM dd, yyyy');
+
+  @override
+  void initState() {
+    super.initState();
+    _updateTaskList();
+  }
+
+  _updateTaskList() {
+    setState(() {
+      _taskList = DBHelper.instance.getTaskList();
+    });
+  }
+
+  Widget _createTask(Task task) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 25.0),
       child: Column(
         children: [
           ListTile(
-            title: Text("Hello",
+            title: Text(task.title,
                 style: TextStyle(
-                    decoration: TextDecoration.lineThrough,
+                    decoration: task.status == 0
+                        ? TextDecoration.none
+                        : TextDecoration.lineThrough,
                     fontSize: 20,
-                    fontWeight: FontWeight.w500)),
-            subtitle: Text("Nov 11th 2020 • Low"),
+                    fontWeight:
+                        task.status == 0 ? FontWeight.w500 : FontWeight.w200)),
+            subtitle: Row(
+              children: [
+                Text(
+                  '${_dateFormatter.format(task.date)}',
+                  style: TextStyle(
+                      decoration: task.status == 0
+                          ? TextDecoration.none
+                          : TextDecoration.lineThrough),
+                ),
+                Text(' • '),
+                Text('${task.priority}',
+                    style: task.status == 0
+                        ? TextStyle(
+                            color: Colors.deepOrange,
+                          )
+                        : TextStyle(decoration: TextDecoration.lineThrough)),
+              ],
+            ),
             trailing: Checkbox(
                 onChanged: (value) {
-                  print(value);
+                  task.status = value ? 1 : 0;
+                  DBHelper.instance.updateTask(task);
+                  _updateTaskList();
                 },
                 activeColor: Theme.of(context).primaryColor,
-                value: true),
+                value: task.status == 1 ? true : false),
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => AddTaskScreen(
+                        updateTaskList: _updateTaskList, task: task))),
           ),
           Divider()
         ],
@@ -35,22 +81,36 @@ class _ListScreenState extends State<ListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: Theme.of(context).primaryColor,
-          child: Icon(Icons.add),
-          onPressed: () => Navigator.push(
-              context, MaterialPageRoute(builder: (_) => AddTaskScreen())),
-        ),
-        body: ListView.builder(
-          padding: EdgeInsets.symmetric(vertical: 70),
-          itemCount: 11,
-          itemBuilder: (BuildContext context, int index) {
-            if (index == 0) {
-              return Padding(
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Theme.of(context).primaryColor,
+        child: Icon(Icons.add),
+        onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => AddTaskScreen(
+                      updateTaskList: _updateTaskList,
+                    ))),
+      ),
+      body: FutureBuilder(
+        future: _taskList,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+          final int completedTaskCount = snapshot.data
+              .where((Task task) => task.status == 1)
+              .toList()
+              .length;
+          return ListView.builder(
+            padding: EdgeInsets.symmetric(vertical: 70),
+            itemCount: 1 + snapshot.data.length,
+            itemBuilder: (BuildContext context, int index) {
+              if (index == 0) {
+                return Padding(
                   padding: EdgeInsets.symmetric(horizontal: 40, vertical: 5),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
                       Text(
                         "My tasks",
                         style: TextStyle(
@@ -58,21 +118,25 @@ class _ListScreenState extends State<ListScreen> {
                             fontSize: 40,
                             fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(
-                        height: 10,
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6, top: 6),
+                        child: Text(
+                          '$completedTaskCount of ${snapshot.data.length}',
+                          style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500),
+                        ),
                       ),
-                      Text(
-                        "1 of 10",
-                        style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w500),
-                      )
                     ],
-                  ));
-            }
-            return _createTask(index);
-          },
-        ));
+                  ),
+                );
+              }
+              return _createTask(snapshot.data[index - 1]);
+            },
+          );
+        },
+      ),
+    );
   }
 }
