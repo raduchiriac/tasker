@@ -42,6 +42,15 @@ class _ListScreenState extends State<ListScreen> {
                         task.status == 0 ? FontWeight.w500 : FontWeight.w200)),
             subtitle: Row(
               children: [
+                task.date.isBefore(DateTime.now())
+                    ? Padding(
+                        padding: const EdgeInsets.only(right: 4.0),
+                        child: Icon(
+                          task.status == 0 ? Icons.alarm : Icons.alarm_off,
+                          size: 14,
+                        ),
+                      )
+                    : SizedBox.shrink(),
                 Text(
                   '${_dateFormatter.format(task.date)}',
                   style: TextStyle(
@@ -53,7 +62,7 @@ class _ListScreenState extends State<ListScreen> {
                 Text('${task.priority}',
                     style: task.status == 0
                         ? TextStyle(
-                            color: Colors.deepOrange,
+                            color: Theme.of(context).primaryColor,
                           )
                         : TextStyle(decoration: TextDecoration.lineThrough)),
               ],

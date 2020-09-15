@@ -41,6 +41,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   }
 
   _handleDatePicker() async {
+    // ignore: todo
     final DateTime date = await showDatePicker(
       context: context,
       initialDate: _date,
@@ -58,7 +59,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   _submit() {
     if (_formKey.currentState.validate()) {
       _formKey.currentState.save();
-      // print('$_title, $_date, $_priority');
 
       Task task = Task(title: _title, date: _date, priority: _priority);
       if (widget.task == null) {
@@ -87,7 +87,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         onTap: () => FocusScope.of(context).unfocus(),
         child: SingleChildScrollView(
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 40.0, vertical: 80.0),
+            padding: EdgeInsets.symmetric(horizontal: 40.0, vertical: 60.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
