@@ -17,4 +17,4 @@ $ flutter build apk --target-platform android-arm64 # build for Android
 - [x] Show an alarm icon for passed events
 - [ ] Play with the intensity of the priority colour
 - [x] Put Monday as the first day in the `showDatePicker`
-- [ ] Create a SnackBar with an "Undo" action when delete
+- [x] Create a SnackBar with an "Undo" action when delete

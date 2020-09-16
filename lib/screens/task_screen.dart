@@ -3,17 +3,17 @@ import 'package:intl/intl.dart';
 import 'package:tasker/helpers/db_helper.dart';
 import 'package:tasker/models/task_model.dart';
 
-class AddTaskScreen extends StatefulWidget {
+class TaskScreen extends StatefulWidget {
   final Function updateTaskList;
   final Task task;
 
-  AddTaskScreen({this.updateTaskList, this.task});
+  TaskScreen({this.updateTaskList, this.task});
 
   @override
-  _AddTaskScreenState createState() => _AddTaskScreenState();
+  _TaskScreenState createState() => _TaskScreenState();
 }
 
-class _AddTaskScreenState extends State<AddTaskScreen> {
+class _TaskScreenState extends State<TaskScreen> {
   final _formKey = GlobalKey<FormState>();
   String _title = '';
   String _priority = "Medium";
@@ -56,7 +56,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
 
-  _submit() {
+  _deleteTask() {
+    DBHelper.instance.deleteTask(widget.task.id);
+    widget.updateTaskList();
+    Navigator.pop(context, widget.task);
+  }
+
+  _submitForm() {
     if (_formKey.currentState.validate()) {
       _formKey.currentState.save();
 
@@ -70,14 +76,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         DBHelper.instance.updateTask(task);
       }
       widget.updateTaskList();
-      Navigator.pop(context);
+      Navigator.of(context).pop(false);
     }
-  }
-
-  _delete() {
-    DBHelper.instance.deleteTask(widget.task.id);
-    widget.updateTaskList();
-    Navigator.pop(context);
   }
 
   @override
@@ -92,7 +92,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => Navigator.of(context).pop(false),
                   child: Icon(Icons.arrow_back,
                       size: 30, color: Theme.of(context).primaryColor),
                 ),
@@ -178,13 +178,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                               fontSize: 20.0,
                             ),
                           ),
-                          onPressed: _submit,
+                          onPressed: _submitForm,
                         ),
                       ),
                       widget.task == null
                           ? SizedBox.shrink()
                           : Container(
-                              margin: EdgeInsets.symmetric(vertical: 0.0),
                               height: 60.0,
                               width: double.infinity,
                               decoration: BoxDecoration(
@@ -199,9 +198,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                     fontSize: 20.0,
                                   ),
                                 ),
-                                onPressed: _delete,
+                                onPressed: _deleteTask,
                               ),
-                            )
+                            ),
                     ],
                   ),
                 ),

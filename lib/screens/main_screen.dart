@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tasker/helpers/db_helper.dart';
 import 'package:tasker/models/task_model.dart';
-import 'package:tasker/screens/add_task_screen.dart';
+import 'package:tasker/screens/task_screen.dart';
 
-class ListScreen extends StatefulWidget {
+class MainScreen extends StatefulWidget {
   @override
-  _ListScreenState createState() => _ListScreenState();
+  _MainScreenState createState() => _MainScreenState();
 }
 
-class _ListScreenState extends State<ListScreen> {
+class _MainScreenState extends State<MainScreen> {
   Future<List<Task>> _taskList;
 
   final DateFormat _dateFormatter = DateFormat('MMM dd, yyyy');
@@ -27,6 +27,13 @@ class _ListScreenState extends State<ListScreen> {
   }
 
   Widget _createTask(Task task) {
+    final Map<String, MaterialColor> _colours = {
+      'Low': Theme.of(context).primaryColor,
+      'Medium': Theme.of(context).primaryColor,
+      'High': Theme.of(context).primaryColor,
+      'Critical': Theme.of(context).primaryColor
+    };
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 25.0),
       child: Column(
@@ -42,7 +49,7 @@ class _ListScreenState extends State<ListScreen> {
                         task.status == 0 ? FontWeight.w500 : FontWeight.w200)),
             subtitle: Row(
               children: [
-                task.date.isBefore(DateTime.now())
+                task.date.isBefore((DateTime.now()).subtract(Duration(days: 1)))
                     ? Padding(
                         padding: const EdgeInsets.only(right: 4.0),
                         child: Icon(
@@ -62,7 +69,7 @@ class _ListScreenState extends State<ListScreen> {
                 Text('${task.priority}',
                     style: task.status == 0
                         ? TextStyle(
-                            color: Theme.of(context).primaryColor,
+                            color: _colours[task.priority],
                           )
                         : TextStyle(decoration: TextDecoration.lineThrough)),
               ],
@@ -75,11 +82,7 @@ class _ListScreenState extends State<ListScreen> {
                 },
                 activeColor: Theme.of(context).primaryColor,
                 value: task.status == 1 ? true : false),
-            onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => AddTaskScreen(
-                        updateTaskList: _updateTaskList, task: task))),
+            onTap: () => {_navigateToTheTaskScreen(context, task)},
           ),
           Divider()
         ],
@@ -93,12 +96,9 @@ class _ListScreenState extends State<ListScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Theme.of(context).primaryColor,
         child: Icon(Icons.add),
-        onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (_) => AddTaskScreen(
-                      updateTaskList: _updateTaskList,
-                    ))),
+        onPressed: () {
+          _navigateToTheTaskScreen(context, null);
+        },
       ),
       body: FutureBuilder(
         future: _taskList,
@@ -147,5 +147,29 @@ class _ListScreenState extends State<ListScreen> {
         },
       ),
     );
+  }
+
+  _navigateToTheTaskScreen(BuildContext context, Task task) async {
+    final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) =>
+                TaskScreen(updateTaskList: _updateTaskList, task: task)));
+
+    if (result is Task) {
+      Scaffold.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: Text('Task "${result.title}" deleted',
+              style: TextStyle(fontSize: 16)),
+          action: SnackBarAction(
+            label: 'UNDO',
+            onPressed: () {
+              DBHelper.instance.insertTask(result);
+              _updateTaskList();
+            },
+          ),
+        ));
+    }
   }
 }
