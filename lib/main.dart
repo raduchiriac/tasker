@@ -12,6 +12,7 @@ void main() {
     ),
     localizationsDelegates: GlobalMaterialLocalizations.delegates,
     supportedLocales: [
+      // Used mainly to be able to set Monday as the first day in the calendar
       const Locale('en', 'GB'),
     ],
     home: MyApp(),

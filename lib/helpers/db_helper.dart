@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
@@ -16,6 +17,7 @@ class DBHelper {
   String colDate = 'date';
   String colPriority = 'priority';
   String colStatus = 'status';
+  String colHidden = 'hidden';
 
   Future<Database> get db async {
     if (_db == null) {
@@ -27,24 +29,32 @@ class DBHelper {
   Future<Database> _initDb() async {
     Directory dir = await getApplicationDocumentsDirectory();
     String path = dir.path + '/tasker.db';
-    final todoListDb =
-        await openDatabase(path, version: 1, onCreate: _createDB);
+    final todoListDb = await openDatabase(path,
+        version: 3, onCreate: _createDB, onUpgrade: _onUpgradeDB);
     return todoListDb;
   }
 
   void _createDB(Database db, int version) async {
     await db.execute(
-        'CREATE TABLE $tasksTable($colId INTEGER PRIMARY KEY AUTOINCREMENT, $colTitle TEXT, $colDate TEXT, $colPriority TEXT, $colStatus INTEGER)');
+        'CREATE TABLE $tasksTable($colId INTEGER PRIMARY KEY AUTOINCREMENT, $colTitle TEXT, $colDate TEXT, $colPriority TEXT, $colStatus INTEGER, $colHidden INTEGER)');
   }
 
-  Future<List<Map<String, dynamic>>> getTaskMapList() async {
+  void _onUpgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < newVersion) {
+      await db.execute(
+          'ALTER TABLE $tasksTable ADD COLUMN $colHidden INTEGER DEFAULT 0 NOT NULL');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getTaskMapList(int hidden) async {
     Database db = await this.db;
-    final List<Map<String, dynamic>> result = await db.query(tasksTable);
+    final List<Map<String, dynamic>> result = await db
+        .query(tasksTable, where: '$colHidden = ?', whereArgs: [hidden]);
     return result;
   }
 
-  Future<List<Task>> getTaskList() async {
-    final List<Map<String, dynamic>> taskMapList = await getTaskMapList();
+  Future<List<Task>> getTaskList({int hidden: 0}) async {
+    final List<Map<String, dynamic>> taskMapList = await getTaskMapList(hidden);
     final List<Task> taskList = [];
     taskMapList.forEach((taskMap) {
       taskList.add(Task.fromMap(taskMap));

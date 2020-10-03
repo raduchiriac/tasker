@@ -69,10 +69,12 @@ class _TaskScreenState extends State<TaskScreen> {
       Task task = Task(title: _title, date: _date, priority: _priority);
       if (widget.task == null) {
         task.status = 0;
+        task.hidden = 0;
         DBHelper.instance.insertTask(task);
       } else {
         task.id = widget.task.id;
         task.status = widget.task.status;
+        task.hidden = widget.task.hidden;
         DBHelper.instance.updateTask(task);
       }
       widget.updateTaskList();

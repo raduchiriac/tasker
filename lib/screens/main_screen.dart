@@ -36,56 +36,84 @@ class _MainScreenState extends State<MainScreen> {
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 25.0),
-      child: Column(
-        children: [
-          ListTile(
-            title: Text(task.title,
-                style: TextStyle(
-                    decoration: task.status == 0
-                        ? TextDecoration.none
-                        : TextDecoration.lineThrough,
-                    fontSize: 20,
-                    fontWeight:
-                        task.status == 0 ? FontWeight.w500 : FontWeight.w200)),
-            subtitle: Row(
-              children: [
-                task.date.isBefore((DateTime.now()).subtract(Duration(days: 1)))
-                    ? Padding(
-                        padding: const EdgeInsets.only(right: 4.0),
-                        child: Icon(
-                          task.status == 0 ? Icons.alarm : Icons.alarm_off,
-                          size: 14,
-                        ),
-                      )
-                    : SizedBox.shrink(),
-                Text(
-                  '${_dateFormatter.format(task.date)}',
+      child: Dismissible(
+        direction: DismissDirection.startToEnd,
+        key: UniqueKey(),
+        background: Container(
+          alignment: AlignmentDirectional.centerStart,
+          color: Theme.of(context).primaryColor,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 25.0),
+            child: Icon(
+              Icons.archive,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        onDismissed: (direction) {
+          // Mark as archived/hidden.
+          task.hidden = 1;
+          DBHelper.instance.updateTask(task);
+          _updateTaskList();
+
+          // Then show a snackbar.
+          Scaffold.of(context).showSnackBar(
+              SnackBar(content: Text('Task "${task.title}" archived')));
+        },
+        child: Column(
+          children: [
+            ListTile(
+              title: Text(task.title,
                   style: TextStyle(
                       decoration: task.status == 0
                           ? TextDecoration.none
-                          : TextDecoration.lineThrough),
-                ),
-                Text(' • '),
-                Text('${task.priority}',
-                    style: task.status == 0
-                        ? TextStyle(
-                            color: _colours[task.priority],
-                          )
-                        : TextStyle(decoration: TextDecoration.lineThrough)),
-              ],
+                          : TextDecoration.lineThrough,
+                      fontSize: 20,
+                      fontWeight: task.status == 0
+                          ? FontWeight.w500
+                          : FontWeight.w200)),
+              subtitle: Row(
+                children: [
+                  // Consider a task to be overdue only starting tomorrow
+                  task.date.isBefore(
+                          (DateTime.now()).subtract(Duration(days: 1)))
+                      ? Padding(
+                          padding: const EdgeInsets.only(right: 4.0),
+                          child: Icon(
+                            task.status == 0 ? Icons.alarm : Icons.alarm_off,
+                            size: 14,
+                          ),
+                        )
+                      : SizedBox.shrink(),
+                  Text(
+                    '${_dateFormatter.format(task.date)}',
+                    style: TextStyle(
+                        decoration: task.status == 0
+                            ? TextDecoration.none
+                            : TextDecoration.lineThrough),
+                  ),
+                  Text(' • '),
+                  Text('${task.priority}',
+                      style: task.status == 0
+                          ? TextStyle(
+                              color: _colours[task.priority],
+                            )
+                          : TextStyle(decoration: TextDecoration.lineThrough)),
+                ],
+              ),
+              trailing: Checkbox(
+                  onChanged: (value) {
+                    task.status = value ? 1 : 0;
+                    DBHelper.instance.updateTask(task);
+                    _updateTaskList();
+                  },
+                  activeColor: Theme.of(context).primaryColor,
+                  value: task.status == 1 ? true : false),
+              onTap: () => {_navigateToTheTaskScreen(context, task)},
             ),
-            trailing: Checkbox(
-                onChanged: (value) {
-                  task.status = value ? 1 : 0;
-                  DBHelper.instance.updateTask(task);
-                  _updateTaskList();
-                },
-                activeColor: Theme.of(context).primaryColor,
-                value: task.status == 1 ? true : false),
-            onTap: () => {_navigateToTheTaskScreen(context, task)},
-          ),
-          Divider()
-        ],
+            Divider()
+          ],
+        ),
       ),
     );
   }

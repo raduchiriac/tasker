@@ -20,4 +20,5 @@ $ flutter build apk --target-platform android-arm64 # build for Android
 - [x] Play with the intensity of the priority colour
 - [x] Put Monday as the first day in the `showDatePicker`
 - [x] Create a SnackBar with an "Undo" action when delete
-- [ ] Show/Hide completed tasks
+- [ ] Swipe to Archive (hide) a task
+- [ ] Show archived tasks
