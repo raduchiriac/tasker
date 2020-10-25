@@ -18,6 +18,7 @@ class _TaskScreenState extends State<TaskScreen> {
   String _title = '';
   String _priority = "Medium";
   DateTime _date = DateTime.now();
+  int _hidden = 0;
   TextEditingController _dateController = TextEditingController();
 
   final DateFormat _dateFormatter = DateFormat('MMM dd, yyyy');
@@ -30,6 +31,7 @@ class _TaskScreenState extends State<TaskScreen> {
       _title = widget.task.title;
       _date = widget.task.date;
       _priority = widget.task.priority;
+      _hidden = widget.task.hidden;
     }
     _dateController.text = _dateFormatter.format(_date);
   }
@@ -66,7 +68,8 @@ class _TaskScreenState extends State<TaskScreen> {
     if (_formKey.currentState.validate()) {
       _formKey.currentState.save();
 
-      Task task = Task(title: _title, date: _date, priority: _priority);
+      Task task = Task(
+          title: _title, date: _date, priority: _priority, hidden: _hidden);
       if (widget.task == null) {
         task.status = 0;
         task.hidden = 0;

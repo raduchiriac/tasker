@@ -53,7 +53,7 @@ class DBHelper {
     return result;
   }
 
-  Future<List<Task>> getTaskList({int hidden: 0}) async {
+  Future<List<Task>> getTaskList(int hidden) async {
     final List<Map<String, dynamic>> taskMapList = await getTaskMapList(hidden);
     final List<Task> taskList = [];
     taskMapList.forEach((taskMap) {

@@ -11,6 +11,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   Future<List<Task>> _taskList;
+  int _hidden = 0;
 
   final DateFormat _dateFormatter = DateFormat('MMM dd, yyyy');
 
@@ -22,7 +23,7 @@ class _MainScreenState extends State<MainScreen> {
 
   _updateTaskList() {
     setState(() {
-      _taskList = DBHelper.instance.getTaskList();
+      _taskList = DBHelper.instance.getTaskList(_hidden);
     });
   }
 
@@ -41,24 +42,26 @@ class _MainScreenState extends State<MainScreen> {
         key: UniqueKey(),
         background: Container(
           alignment: AlignmentDirectional.centerStart,
-          color: Theme.of(context).primaryColor,
+          color: _hidden == 1 ? null : Theme.of(context).primaryColor,
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 25.0),
             child: Icon(
-              Icons.archive,
-              color: Colors.white,
+              _hidden == 1 ? Icons.unarchive : Icons.archive,
+              color:
+                  _hidden == 1 ? Theme.of(context).primaryColor : Colors.white,
             ),
           ),
         ),
         onDismissed: (direction) {
-          // Mark as archived/hidden.
-          task.hidden = 1;
+          // Mark as archived/visible.
+          task.hidden = 1 - _hidden;
           DBHelper.instance.updateTask(task);
           _updateTaskList();
 
           // Then show a snackbar.
-          Scaffold.of(context).showSnackBar(
-              SnackBar(content: Text('Task "${task.title}" archived')));
+          Scaffold.of(context).showSnackBar(SnackBar(
+              content: Text(
+                  'Task "${task.title}" was ${_hidden == 1 ? 'recovered' : 'archived'}')));
         },
         child: Column(
           children: [
@@ -80,7 +83,9 @@ class _MainScreenState extends State<MainScreen> {
                       ? Padding(
                           padding: const EdgeInsets.only(right: 4.0),
                           child: Icon(
-                            task.status == 0 ? Icons.alarm : Icons.alarm_off,
+                            task.status == 0
+                                ? Icons.alarm_add
+                                : Icons.alarm_off,
                             size: 14,
                           ),
                         )
@@ -101,14 +106,16 @@ class _MainScreenState extends State<MainScreen> {
                           : TextStyle(decoration: TextDecoration.lineThrough)),
                 ],
               ),
-              trailing: Checkbox(
-                  onChanged: (value) {
-                    task.status = value ? 1 : 0;
-                    DBHelper.instance.updateTask(task);
-                    _updateTaskList();
-                  },
-                  activeColor: Theme.of(context).primaryColor,
-                  value: task.status == 1 ? true : false),
+              trailing: task.hidden == 1
+                  ? null
+                  : Checkbox(
+                      onChanged: (value) {
+                        task.status = value ? 1 : 0;
+                        DBHelper.instance.updateTask(task);
+                        _updateTaskList();
+                      },
+                      activeColor: Theme.of(context).primaryColor,
+                      value: task.status == 1 ? true : false),
               onTap: () => {_navigateToTheTaskScreen(context, task)},
             ),
             Divider()
@@ -121,13 +128,15 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Theme.of(context).primaryColor,
-        child: Icon(Icons.add),
-        onPressed: () {
-          _navigateToTheTaskScreen(context, null);
-        },
-      ),
+      floatingActionButton: _hidden == 1
+          ? null
+          : FloatingActionButton(
+              backgroundColor: Theme.of(context).primaryColor,
+              child: Icon(Icons.add),
+              onPressed: () {
+                _navigateToTheTaskScreen(context, null);
+              },
+            ),
       body: FutureBuilder(
         future: _taskList,
         builder: (context, snapshot) {
@@ -146,6 +155,8 @@ class _MainScreenState extends State<MainScreen> {
                 return Padding(
                   padding: EdgeInsets.symmetric(horizontal: 40, vertical: 5),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
@@ -155,8 +166,22 @@ class _MainScreenState extends State<MainScreen> {
                             fontSize: 40,
                             fontWeight: FontWeight.bold),
                       ),
+                      IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _hidden = 1 - _hidden;
+                            });
+                            _updateTaskList();
+                          },
+                          icon: Icon(_hidden == 1
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined),
+                          color: _hidden == 1
+                              ? Theme.of(context).primaryColor
+                              : null),
+                      IconButton(onPressed: () => {}, icon: Icon(Icons.search)),
                       Padding(
-                        padding: const EdgeInsets.only(right: 6, top: 6),
+                        padding: const EdgeInsets.only(right: 6, top: 0),
                         child: Text(
                           '$completedTaskCount of ${snapshot.data.length}',
                           style: TextStyle(
@@ -188,7 +213,7 @@ class _MainScreenState extends State<MainScreen> {
       Scaffold.of(context)
         ..removeCurrentSnackBar()
         ..showSnackBar(SnackBar(
-          content: Text('Task "${result.title}" deleted',
+          content: Text('Task "${result.title}" was deleted',
               style: TextStyle(fontSize: 16)),
           action: SnackBarAction(
             label: 'UNDO',
